@@ -1,8 +1,15 @@
 import json
 import argparse
+from collections import deque, defaultdict
 from datetime import datetime, timedelta
 
 def parse_args():
+    """
+    Parse command-line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed command-line arguments.
+    """
 
     # Create an ArgumentParser object to handle command-line arguments
     parser = argparse.ArgumentParser(description='Calculate moving average of translation delivery time')
@@ -15,6 +22,16 @@ def parse_args():
     return parser.parse_args()
 
 def calculate_moving_average(events, window_size):
+    """
+    Calculate the moving average of translation delivery time.
+
+    Args:
+        events (list): List of translation events.
+        window_size (int): Size of the moving window for calculating the average.
+
+    Returns:
+        list: List of dictionaries containing date and average delivery time.
+    """
 
     # Get the start time and end time of the event data
     start_time = datetime.strptime(events[0]['timestamp'], '%Y-%m-%d %H:%M:%S.%f').replace(second=0, microsecond=0) # Start the time as the first full minute before the first event
@@ -95,6 +112,5 @@ def main():
     except FileNotFoundError:
         print(f"The file '{args.input_file}' was not found.")
 
-# Start the code
 if __name__ == "__main__":
     main()
