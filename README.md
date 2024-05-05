@@ -15,14 +15,15 @@ Run the CLI with the following command:
 
 ```
 
-python translation_delivery_time.py --input_file events.json --window_size 10
+python translation_delivery_time.py --input_file events.json --window_size 10 --output_file output.json
 
 ```
 
 * '--input_file': Path to the input JSON file containing translation events.
 * '--window_size': The size of the window for calculating the moving average.
+* '--output_file': The name of the JSON file that will be created as the output.
   
-The output will be printed to the console and also saved to 'output.json' in the same directory.
+The output will be printed to the console and also saved to '--output_file' in the same directory.
 
 ## Testing
 To test the application, you can provide sample input files and verify if the output matches the expected results.
@@ -32,7 +33,7 @@ To test the application, you can provide sample input files and verify if the ou
 
 ```
 
-python translation_delivery_time.py --input_file test_events.json --window_size 5
+python translation_delivery_time.py --input_file test_events.json --window_size 5 --output_file output_test.json
 
 ```
 
@@ -77,6 +78,7 @@ Example output:
 {"date": "2018-12-26 18:22:00", "average_delivery_time": 31.0}
 {"date": "2018-12-26 18:23:00", "average_delivery_time": 31.0}
 {"date": "2018-12-26 18:24:00", "average_delivery_time": 42.5}
+File has been saved as 'output.json'
 ```
 
 ## Requirements
