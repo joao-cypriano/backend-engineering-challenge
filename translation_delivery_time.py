@@ -16,6 +16,7 @@ def parse_args():
     # Add arguments for input file and window size
     parser.add_argument('--input_file', type=str, help='Input JSON file path')
     parser.add_argument('--window_size', type=int, help='Window size for moving average calculation')
+    parser.add_argument('--output_file', type=str, help='Input JSON output file path')
 
     # Parse the command-line arguments
     return parser.parse_args()
@@ -98,8 +99,9 @@ def main():
             }))
 
         # Write output to output.json with each event on a separate line
-        with open('output.json', 'w') as output_file:
+        with open(args.output_file, 'w') as output_file:
             json.dump(output, output_file)
+            print(f"File has been saved as '{args.output_file}'")
     
     # Handle incorrectly typed files or unexisting ones
     except FileNotFoundError:
