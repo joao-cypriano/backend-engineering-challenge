@@ -1,6 +1,5 @@
 import json
 import argparse
-from collections import deque, defaultdict
 from datetime import datetime, timedelta
 
 def parse_args():
