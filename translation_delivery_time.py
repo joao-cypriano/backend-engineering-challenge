@@ -29,7 +29,7 @@ def calculate_moving_average(events, window_size):
         window_size (int): Size of the moving window for calculating the average.
 
     Returns:
-        list: List of dictionaries containing date and average delivery time.
+        dict: Dictionary containing timestamps as keys and corresponding average delivery times.
     """
 
     # Get the start time and end time of the event data
@@ -72,15 +72,7 @@ def calculate_moving_average(events, window_size):
         average_duration = sum(durations) / len(durations)
         average_duration_dict[timestamp] = average_duration
 
-    # Format the output
-    formatted_output = []
-    for timestamp, avg_duration in average_duration_dict.items():
-        formatted_output.append({
-            "date": timestamp,
-            "average_delivery_time": avg_duration
-        })
-
-    return formatted_output
+    return average_duration_dict
 
 def main():
 
@@ -98,14 +90,16 @@ def main():
         # Calculate moving average and get the output
         output = calculate_moving_average(events, args.window_size)
 
-        # Print the results
-        for item in output:
-            print(json.dumps(item))
+        # Print the results in the desired format
+        for timestamp, avg_duration in output.items():
+            print(json.dumps({
+                "date": timestamp,
+                "average_delivery_time": avg_duration
+            }))
 
         # Write output to output.json with each event on a separate line
         with open('output.json', 'w') as output_file:
             json.dump(output, output_file)
-
     
     # Handle incorrectly typed files or unexisting ones
     except FileNotFoundError:
