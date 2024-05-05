@@ -1,59 +1,100 @@
 import json
 import argparse
-from collections import deque
 from datetime import datetime, timedelta
 
 def parse_args():
+
+    # Create an ArgumentParser object to handle command-line arguments
     parser = argparse.ArgumentParser(description='Calculate moving average of translation delivery time')
+
+    # Add arguments for input file and window size
     parser.add_argument('--input_file', type=str, help='Input JSON file path')
     parser.add_argument('--window_size', type=int, help='Window size for moving average calculation')
+
+    # Parse the command-line arguments
     return parser.parse_args()
 
 def calculate_moving_average(events, window_size):
-    window = deque()
-    output = []
 
-    start_time = datetime.strptime(events[0]['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
-    end_time = datetime.strptime(events[-1]['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
+    # Get the start time and end time of the event data
+    start_time = datetime.strptime(events[0]['timestamp'], '%Y-%m-%d %H:%M:%S.%f').replace(second=0, microsecond=0) # Start the time as the first full minute before the first event
+    end_time = datetime.strptime(events[-1]['timestamp'], '%Y-%m-%d %H:%M:%S.%f').replace(second=0, microsecond=0) + timedelta(minutes=1) # End the window after the last minute is finished
+    events_by_time = {} # Dictionary to store events grouped by time
 
-    current_time = start_time
-    while current_time <= end_time:
-        events_in_window = [event for event in window if current_time - timedelta(minutes=window_size) <= event[0] <= current_time]
-        if events_in_window:
-            window_events = [event[1] for event in events_in_window]
-            average_delivery_time = sum(window_events) / len(window_events)
-            output.append({'date': current_time.strftime('%Y-%m-%d %H:%M:00'), 'average_delivery_time': average_delivery_time})
+    # Iterate through each translation event
+    for event in events:
+        window_counter = 0
+
+        # Organize event timestamps usage to reduce redundancy
+        event_timestamp = datetime.strptime(event['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
+        replaced_event_timestamp = event_timestamp.replace(second=0, microsecond=0)
+        formatted_replaced_event_timestamp = replaced_event_timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Treat timestamps that are exactly on the minute mark (should enter that minute calculation) and that are after the minute mark (should enter the next minute calculation)
+        if event_timestamp != replaced_event_timestamp:
+            event_time = replaced_event_timestamp + timedelta(minutes=1)
+
+            # Treat the first event if it's after the exact minute mark
+            if event == events[0]:
+                events_by_time[formatted_replaced_event_timestamp] = [0]
         else:
-            output.append({'date': current_time.strftime('%Y-%m-%d %H:%M:00'), 'average_delivery_time': 0})
+            event_time = formatted_replaced_event_timestamp
+        duration = event['duration']
 
-        current_time += timedelta(minutes=1)
+        # Distribute the event duration across the time window
+        while event_time <= end_time and window_counter < window_size:
+            if event_time.strftime("%Y-%m-%d %H:%M:%S") in events_by_time:
+                events_by_time[event_time.strftime("%Y-%m-%d %H:%M:%S")].append(duration)
+            else:
+                events_by_time[event_time.strftime("%Y-%m-%d %H:%M:%S")] = [duration]
+            window_counter += 1
+            event_time += timedelta(minutes=1)
 
-        # Add events to the window that fall within the current minute
-        while events and datetime.strptime(events[0]['timestamp'], '%Y-%m-%d %H:%M:%S.%f') <= current_time:
-            event = events.pop(0)
-            timestamp = datetime.strptime(event['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
-            duration = event['duration']
-            window.append((timestamp, duration))
+    # Calculate the average duration for each time window
+    average_duration_dict = {}
+    for timestamp, durations in events_by_time.items():
+        average_duration = sum(durations) / len(durations)
+        average_duration_dict[timestamp] = average_duration
 
-        # Remove events that are outside the window
-        while window and current_time - window[0][0] >= timedelta(minutes=window_size):
-            window.popleft()
+    # Format the output
+    formatted_output = []
+    for timestamp, avg_duration in average_duration_dict.items():
+        formatted_output.append({
+            "date": timestamp,
+            "average_delivery_time": avg_duration
+        })
 
-    return output
-
-
+    return formatted_output
 
 def main():
-    args = parse_args()
 
-    with open(args.input_file, 'r') as file:
-        events = [json.loads(line) for line in file]
+    try:
+        # Parse command-line arguments
+        args = parse_args()
 
-    events.sort(key=lambda x: x['timestamp'])
-    output = calculate_moving_average(events, args.window_size)
+        # Open the input JSON file and load its data
+        with open(args.input_file, 'r') as file:
+            events = [json.loads(line) for line in file]
 
-    for line in output:
-        print(json.dumps(line))
+        # Sort events by timestamp
+        events.sort(key=lambda x: x['timestamp'])
 
+        # Calculate moving average and get the output
+        output = calculate_moving_average(events, args.window_size)
+
+        # Print the results
+        for item in output:
+            print(json.dumps(item))
+
+        # Write output to output.json with each event on a separate line
+        with open('output.json', 'w') as output_file:
+            json.dump(output, output_file)
+
+    
+    # Handle incorrectly typed files or unexisting ones
+    except FileNotFoundError:
+        print(f"The file '{args.input_file}' was not found.")
+
+# Start the code
 if __name__ == "__main__":
     main()
