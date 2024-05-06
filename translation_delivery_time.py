@@ -54,7 +54,7 @@ def calculate_moving_average(events, window_size):
             if event == events[0]:
                 events_by_time[formatted_replaced_event_timestamp] = [0]
         else:
-            event_time = formatted_replaced_event_timestamp
+            event_time = replaced_event_timestamp
         duration = event['duration']
 
         # Distribute the event duration across the time window
