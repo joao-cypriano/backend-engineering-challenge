@@ -33,8 +33,7 @@ def calculate_moving_average(events, window_size):
         dict: Dictionary containing timestamps as keys and corresponding average delivery times.
     """
 
-    # Get the start time and end time of the event data
-    start_time = datetime.strptime(events[0]['timestamp'], '%Y-%m-%d %H:%M:%S.%f').replace(second=0, microsecond=0) # Start the time as the first full minute before the first event
+    # Get the end time of the event data
     end_time = datetime.strptime(events[-1]['timestamp'], '%Y-%m-%d %H:%M:%S.%f').replace(second=0, microsecond=0) + timedelta(minutes=1) # End the window after the last minute is finished
     events_by_time = {} # Dictionary to store events grouped by time
 
